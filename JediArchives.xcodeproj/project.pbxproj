@@ -165,6 +165,7 @@
 			buildConfigurationList = 01BBAAA01FFC70B0008CEF3F /* Build configuration list for PBXNativeTarget "JediArchives" */;
 			buildPhases = (
 				6AA9E4B7585989F570036A50 /* [CP] Check Pods Manifest.lock */,
+				55495E37247C203400AE672F /* Generate Apollo GraphQL API */,
 				01BBAA8A1FFC70B0008CEF3F /* Sources */,
 				01BBAA8B1FFC70B0008CEF3F /* Frameworks */,
 				01BBAA8C1FFC70B0008CEF3F /* Resources */,
@@ -229,6 +230,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		55495E37247C203400AE672F /* Generate Apollo GraphQL API */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Apollo GraphQL API";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which apollo-codegen >/dev/null; then\n\n  APOLLO_FRAMEWORK_PATH=\"$(eval find $FRAMEWORK_SEARCH_PATHS -name \"Apollo.framework\" -maxdepth 1)\"\n\n  if [ -z \"$APOLLO_FRAMEWORK_PATH\" ]; then\n    echo \"warning: Couldn't find Apollo.framework in FRAMEWORK_SEARCH_PATHS; make sure to add the framework to your project.\"\n    exit 0\n  fi\n\n  cd \"${SRCROOT}/${TARGET_NAME}/GraphQL\"\n  $APOLLO_FRAMEWORK_PATH/check-and-run-apollo-codegen.sh generate \\\n    $(find . -name '*.graphql') \\\n    --schema schema.json \\\n    --output Generated/GraphQLAPI.swift\nelse\n  echo \"Skipping Apollo code generation\"\nfi\n";
+		};
 		6AA9E4B7585989F570036A50 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -248,7 +267,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			shellScript = "SCRIPT_PATH=\"${PODS_ROOT}/Apollo/scripts\"\ncd \"${SRCROOT}/${TARGET_NAME}\"\n\"${SCRIPT_PATH}\"/run-bundled-codegen.sh codegen:generate --target=swift --includes=./**/*.graphql --localSchemaFile=\"GraphQL/schema.json\" GraphQL/Generated/GraphQLAPI.swift\n";
 			showEnvVarsInLog = 0;
 		};
 		D8B46F28DF683CBE783DBC64 /* [CP] Embed Pods Frameworks */ = {

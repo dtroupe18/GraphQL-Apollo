@@ -1,0 +1,18 @@
+query AllFilms {
+  # [1] - This statement defines the top level query collection from
+  # which you’re requesting data. In this case, allFilms returns,
+  # unsurprisingly, all films.
+
+  allFilms {
+    # 2 The allFilms collection returns a list of intermediate
+    # FilmConnection objects, so here you request the films attribute,
+    # which will include a list of actual Film objects.
+    
+    films {
+      # 3 Define the attributes you want to request from each Film object.
+      id
+      title
+      releaseDate
+    }
+  }
+}

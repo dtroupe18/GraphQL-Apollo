@@ -29,14 +29,18 @@
 import Foundation
 
 struct RefItem: BaseCellViewable {
-
   let id: String
   let label: String
   let value: String?
+
+  init(film: AllFilmsQuery.Data.AllFilm.Film) {
+    id = film.id
+    label = film.title ?? ""
+    value = film.releaseDate ?? ""
+  }
 }
 
 struct InfoItem: BaseCellViewable {
-
   let label: String
   let value: String?
 }

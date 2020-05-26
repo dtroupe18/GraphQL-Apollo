@@ -47,6 +47,7 @@ class FilmsViewController: UITableViewController {
 }
 
 // MARK: Table View
+
 extension FilmsViewController {
 
   override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -62,8 +63,43 @@ extension FilmsViewController {
 }
 
 // MARK: Data
+
 extension FilmsViewController {
 
   func loadFilms() {
+    // [1] - execute the AllFilms query by passing an instance of it to the
+    // shared Apollo client. ApolloClient translates the query to JSON,
+    // executes the HTTP call, maps the response to the generated structs,
+    // and invokes the provided completion handler with either result data
+    // or an error if there was a failure.
+    let query = AllFilmsQuery()
+    Apollo.shared.client.fetch(query: query) { result in
+      switch result {
+      case .success(let graphQLResult):
+        // [2] - unwrap a chain of optionals and compactMap to produce a
+        // list of film results. If you inspect the type of results?.data?.allFilms?.films,
+        // you’ll see it’s [Film?]?. Therefore compactMap is used to produce a list without optional objects.
+        if let films = graphQLResult.data?.allFilms?.films?.compactMap({$0}) {
+          // [3] - map the film results to RefItem.
+          let models = films.map(RefItem.init)
+          // [4] - create a list of Section enums that represent the sections displayed in the table view.
+          // In this case there is just one section of films.
+          let sections: [Section] = [
+            .references(title: NSLocalizedString("Films", comment: ""), models: models)
+          ]
+
+          // [5] - set the list of sections on the table view’s data source and
+          // reload the table view to render the data to the screen.
+          self.dataSource.sections = sections
+          self.tableView.reloadData()
+        } else if let errors = graphQLResult.errors {
+          // GraphQL errors
+          print("Errors: \(errors)")
+        }
+      case .failure(let error):
+        // Network or response format errors
+        print("Error loading data \(error)")
+      }
+    }
   }
 }
