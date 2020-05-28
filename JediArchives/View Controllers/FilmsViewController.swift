@@ -79,9 +79,13 @@ extension FilmsViewController {
         // [2] - unwrap a chain of optionals and compactMap to produce a
         // list of film results. If you inspect the type of results?.data?.allFilms?.films,
         // you’ll see it’s [Film?]?. Therefore compactMap is used to produce a list without optional objects.
-        if let films = graphQLResult.data?.allFilms?.films?.compactMap({$0}) {
+
+        if let films = graphQLResult.data?.allFilms?.films?
+          .compactMap({$0}).map({ $0.fragments.listFilmFragment }) {
+
           // [3] - map the film results to RefItem.
           let models = films.map(RefItem.init)
+
           // [4] - create a list of Section enums that represent the sections displayed in the table view.
           // In this case there is just one section of films.
           let sections: [Section] = [
@@ -93,11 +97,11 @@ extension FilmsViewController {
           self.dataSource.sections = sections
           self.tableView.reloadData()
         } else if let errors = graphQLResult.errors {
-          // GraphQL errors
+          // GraphQL errors.
           print("Errors: \(errors)")
         }
       case .failure(let error):
-        // Network or response format errors
+        // Network or response format errors.
         print("Error loading data \(error)")
       }
     }

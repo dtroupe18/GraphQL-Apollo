@@ -33,10 +33,16 @@ struct RefItem: BaseCellViewable {
   let label: String
   let value: String?
 
-  init(film: AllFilmsQuery.Data.AllFilm.Film) {
+  init(film: ListFilmFragment) {
     id = film.id
     label = film.title ?? ""
     value = film.releaseDate ?? ""
+  }
+
+  init(character: FilmDetailQuery.Data.Film.CharacterConnection.Character) {
+    id = character.id
+    label = character.name ?? ""
+    value = nil
   }
 }
 

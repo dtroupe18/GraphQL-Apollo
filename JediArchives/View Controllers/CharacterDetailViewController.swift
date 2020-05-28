@@ -73,5 +73,59 @@ extension CharacterDetailViewController {
 extension CharacterDetailViewController {
 
   func loadCharacter() {
+    // 1 Initialize and execute CharacterDetailQuery, providing the character ID.
+    let query = CharacterDetailQuery(id: characterID)
+
+    Apollo.shared.client.fetch(query: query) { result in
+      switch result {
+      case .success(let graphQLResult):
+        // 2 optional binding to get the character from the result object.
+        if let character = graphQLResult.data?.person {
+          // 3 set the title of the view controller to the character’s name.
+          self.navigationItem.title = character.name ?? ""
+
+          // 4 create a list of InfoItem objects to represent the various character attributes you requested.
+          let infoItems: [InfoItem] = [
+            InfoItem(label: NSLocalizedString("Name", comment: ""),
+                     value: character.name ?? "NA"),
+            InfoItem(label: NSLocalizedString("Birth Year", comment: ""),
+                     value: character.birthYear ?? "NA"),
+            InfoItem(label: NSLocalizedString("Eye Color", comment: ""),
+                     value: character.eyeColor ?? "NA"),
+            InfoItem(label: NSLocalizedString("Gender", comment: ""),
+                     value: character.gender ?? "NA"),
+            InfoItem(label: NSLocalizedString("Hair Color", comment: ""),
+                     value: character.hairColor ?? "NA"),
+            InfoItem(label: NSLocalizedString("Skin Color", comment: ""),
+                     value: character.skinColor ?? "NA"),
+            InfoItem(label: NSLocalizedString("Home World", comment: ""),
+                     value: character.homeworld?.name ?? "NA")
+          ]
+
+          // 5 create the first table view section, passing the InfoItem objects as the contents.
+          var sections: [Section] = [
+            .info(title: NSLocalizedString("Info", comment: ""), models: infoItems)
+          ]
+
+          // 6 make use of the films, again using the ListFilmFragment,
+          // to populate a table view section with films this character has appeared in.
+          let filmItems = character.filmConnection?.films?.compactMap({$0})
+            .map({RefItem(film: $0.fragments.listFilmFragment)})
+          if let filmItems = filmItems, filmItems.count > 0 {
+            sections.append(.references(title: NSLocalizedString("Appears In", comment: ""),
+                                        models: filmItems))
+          }
+
+          // 7 update the data source’s section list and reload the table view to render the new data to the UI.
+          self.dataSource.sections = sections
+          self.tableView.reloadData()
+        } else if let error = graphQLResult.errors {
+          print("Error loading data \(error)")
+        }
+      case .failure(let error):
+        // Network or response format errors.
+        print("Error loading data \(error)")
+      }
+    }
   }
 }

@@ -73,5 +73,58 @@ extension FilmDetailViewController {
 extension FilmDetailViewController {
 
   func loadFilmDetail() {
+    // 1 Create an instance of FilmDetailQuery and pass the ID for the film
+    // this view controller should display. With that query object,
+    // you execute the fetch via the Apollo client.
+    let query = FilmDetailQuery(id: filmID)
+
+    Apollo.shared.client.fetch(query: query) { result in
+      switch result {
+      case .success(let graphQLResult):
+        // 2 Use optional binding to get the film from the query result.
+        if let film = graphQLResult.data?.film {
+
+          // 3 Set the title of the screen to the name of the film.
+          self.navigationItem.title = film.title ?? ""
+
+          // 4 create a list of InfoItem models to represent each attribute
+          // of the film you want to render to the UI. Each item has a title
+          // and value, and there is some nil coalescing to account for missing values.
+          let infoItems: [InfoItem] = [
+            InfoItem(label: NSLocalizedString("Title", comment: ""), value: film.title ?? "NA"),
+            InfoItem(label: NSLocalizedString("Episode", comment: ""), value: "\(film.episodeId ?? 0)"),
+            InfoItem(label: NSLocalizedString("Released", comment: ""), value: film.releaseDate ?? "NA"),
+            InfoItem(label: NSLocalizedString("Director", comment: ""), value: film.director ?? "NA")
+          ]
+
+          // 5 Define a Section for the film info section, providing the list of info items you just created.
+          var sections: [Section] = [
+            .info(title: NSLocalizedString("Info", comment: ""), models: infoItems)
+          ]
+
+          // 6 Second section of this detail screen is a list of characters that appear
+          // in this film. You map the character list from the film result to a list of RefItem objects.
+
+          let characterItems = film.characterConnection?.characters?
+            .compactMap({$0}).map({RefItem(character: $0)})
+
+          // 7 Create a new Section, to show the character items.
+          if let characterItems = characterItems, characterItems.count > 0 {
+            sections.append(.references(title: NSLocalizedString("Characters", comment: ""),
+                                        models: characterItems))
+          }
+
+          // 8 Update the data source and reload the table view to render the data.
+          self.dataSource.sections = sections
+          self.tableView.reloadData()
+        } else if let errors = graphQLResult.errors {
+          // GraphQL errors.
+          print("Errors: \(errors)")
+        }
+      case .failure(let error):
+        // Network or response format errors.
+        print("Error loading data \(error)")
+      }
+    }
   }
 }
